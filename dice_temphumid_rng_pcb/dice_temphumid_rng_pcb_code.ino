@@ -48,6 +48,10 @@ void gradient() {
 volatile bool button_pressed = false;
 volatile unsigned long start = 0;
 
+//temperature unit: true for celsius, false for fahrenheit
+bool unit = true;
+
+
 
 
 // "dice" LED numbers in array
@@ -211,7 +215,7 @@ void dig(int num) {
 }
 
 
-//Segment arrangements for numbers 0 - 9 and decimal point (DP) on the 7-segment display
+//Segment arrangements for numbers 0 - 9, C, F, and decimal point (DP) on the 7-segment display
 void zero(int num) {
   digitalWrite(A, HIGH);
   digitalWrite(B, HIGH);
@@ -306,9 +310,25 @@ void point(int num) {
   dig(num);
 }
 
+void see(int num) {
+  digitalWrite(A, HIGH);
+  digitalWrite(F, HIGH);
+  digitalWrite(E, HIGH);
+  digitalWrite(D, HIGH);
+  dig(num);
+}
 
-//function pointer array for all digits (0 - 9)
-void (*digs[10])(int) = {zero, one, two, three, four, five, six, seven, eight, nine};
+void ef(int num) {
+  digitalWrite(A, HIGH);
+  digitalWrite(F, HIGH);
+  digitalWrite(G, HIGH);
+  digitalWrite(E, HIGH);
+  dig(num);
+}
+
+
+//function pointer array for all digits (0 - 9) and decimal point
+void (*digs[11])(int) = {zero, one, two, three, four, five, six, seven, eight, nine, point};
 
 
 /**
@@ -477,6 +497,7 @@ void setup() {
 >continuously alternates temperature (in fahrenheit) and humidity data at 1 second intervals on the 7-segment display 
 >short button press displays dice throw on RGB LEDs
 >long button press displays random integer between 1 - 999 on 7-segment display
+>longer button press toggles between celsius and fahrenheit
 >wait at least a second between presses
 */
 void loop() {
@@ -485,16 +506,13 @@ void loop() {
   dht_start();
 
   if (dht_read(&humidity, &temperature) == 0) {
-    int temp = 18 * temperature + 320;
+    int temp;
+    unit ? temp = 10*temperature : temp = 10*(1.8*temperature + 32);
 
     for(int i = 0; i < 60; i++) {
       sevseg(((temp % 1000) - (temp % 100)) / 100, 0);
       sevseg(((temp % 100) - (temp % 10)) / 10, 1);
-
-      point(1);
-      delay(4);
-      dig_clear();
-
+      sevseg(10, 1);
       sevseg(temp % 10, 2);
     }
 
@@ -502,10 +520,7 @@ void loop() {
       sevseg(0, 0);
       sevseg(((humidity % 100) - (temp % 10)) / 10, 1);
       sevseg(humidity % 10, 2);
-
-      point(2);
-      delay(4);
-      dig_clear();
+      sevseg(10, 2);
     }
   }
 
@@ -518,8 +533,46 @@ void loop() {
       if(duration < 2000) {
         dice();
 
-      } else {
+      } else if((duration > 2000) && (duration < 4000)) {
         rngsus();
+
+      } else {
+        if(unit) {
+          for(int i = 0; i < 60; i++) {
+            digitalWrite(G, HIGH);
+            digitalWrite(ST, HIGH);
+            delay(6);
+            dig_clear();
+
+            ef(1);
+            delay(6);
+            dig_clear();
+
+            digitalWrite(G, HIGH);
+            digitalWrite(RD, HIGH);
+            delay(6);
+            dig_clear();
+          }
+
+        } else {
+            for(int i = 0; i < 60; i++) {
+            digitalWrite(G, HIGH);
+            digitalWrite(ST, HIGH);
+            delay(6);
+            dig_clear();
+
+            see(1);
+            delay(6);
+            dig_clear();
+
+            digitalWrite(G, HIGH);
+            digitalWrite(RD, HIGH);
+            delay(6);
+            dig_clear();
+          }
+        }
+
+        unit = !unit;
       }
     }
   }
