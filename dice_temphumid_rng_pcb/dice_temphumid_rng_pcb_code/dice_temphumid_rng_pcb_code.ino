@@ -20,9 +20,9 @@
 #define F 21
 #define G 9
 #define DP 6
-#define ST 23
-#define ND 20
-#define RD 13
+#define ST 23 //first digit
+#define ND 20 //second digit
+#define RD 13 //third digit
 
 const int NUM_LEDS = 14,
 BRIGHTNESS = 10;
@@ -152,6 +152,8 @@ void (*dado[12])() = {one_one, one_two, one_three, one_four, one_five, one_six, 
  * simulates a dice throw at random
  */
 void dice() {
+  randomSeed(analogRead(A0));
+
   dado[random(0, 6)]();
   dado[random(6, 12)]();
 
@@ -459,6 +461,95 @@ int dht_read(uint8_t *humidity, uint8_t *temperature) {
 }
 
 
+/**
+ * Short startup animation
+ */
+void wave() {
+  digitalWrite(A, HIGH);
+  digitalWrite(F, HIGH);
+  digitalWrite(ST, HIGH);
+  delay(150);
+  digitalWrite(A, LOW);
+  digitalWrite(F, LOW);
+  digitalWrite(ST, LOW);
+
+  for(int i = 0; i < 60; i++) {
+    digitalWrite(A, HIGH);
+    digitalWrite(F, HIGH);
+    digitalWrite(ND, HIGH);
+    delay(1.25);
+    digitalWrite(A, LOW);
+    digitalWrite(F, LOW);
+    digitalWrite(ND, LOW);
+
+    digitalWrite(B, HIGH);
+    digitalWrite(G, HIGH);
+    digitalWrite(E, HIGH);
+    digitalWrite(ST, HIGH);
+    delay(1.25);
+    digitalWrite(B, LOW);
+    digitalWrite(G, LOW);
+    digitalWrite(E, LOW);
+    digitalWrite(ST, LOW);
+  }
+
+  for(int i = 0; i < 60; i++) {
+    digitalWrite(A, HIGH);
+    digitalWrite(F, HIGH);
+    digitalWrite(RD, HIGH);
+    delay(0.833);
+    digitalWrite(A, LOW);
+    digitalWrite(F, LOW);
+    digitalWrite(RD, LOW);
+
+    digitalWrite(B, HIGH);
+    digitalWrite(G, HIGH);
+    digitalWrite(E, HIGH);
+    digitalWrite(ND, HIGH);
+    delay(0.833);
+    digitalWrite(B, LOW);
+    digitalWrite(G, LOW);
+    digitalWrite(E, LOW);
+    digitalWrite(ND, LOW);
+
+    digitalWrite(C, HIGH);
+    digitalWrite(D, HIGH);
+    digitalWrite(ST, HIGH);
+    delay(0.833);
+    digitalWrite(C, LOW);
+    digitalWrite(D, LOW);
+    digitalWrite(ST, LOW);
+  }
+
+  for(int i = 0; i < 60; i++) {
+    digitalWrite(B, HIGH);
+    digitalWrite(G, HIGH);
+    digitalWrite(E, HIGH);
+    digitalWrite(RD, HIGH);
+    delay(1.25);
+    digitalWrite(B, LOW);
+    digitalWrite(G, LOW);
+    digitalWrite(E, LOW);
+    digitalWrite(RD, LOW);
+
+    digitalWrite(C, HIGH);
+    digitalWrite(D, HIGH);
+    digitalWrite(ND, HIGH);
+    delay(1.25);
+    digitalWrite(C, LOW);
+    digitalWrite(D, LOW);
+    digitalWrite(ND, LOW);
+  }
+
+  digitalWrite(C, HIGH);
+  digitalWrite(D, HIGH);
+  digitalWrite(RD, HIGH);
+  delay(150);
+  digitalWrite(C, LOW);
+  digitalWrite(D, LOW);
+  digitalWrite(RD, LOW);
+}
+
 
 
 void setup() {
@@ -490,6 +581,8 @@ void setup() {
   pinMode(ST, OUTPUT);
   pinMode(ND, OUTPUT);
   pinMode(RD, OUTPUT);
+
+  wave();
 }
 
 
