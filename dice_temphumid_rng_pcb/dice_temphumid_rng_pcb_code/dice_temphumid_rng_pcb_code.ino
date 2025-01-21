@@ -81,7 +81,6 @@ void set_num(CRGB leds[], int arr_size, const int indices[]) {
   FastLED.show();
 }
 
-
 //LED arrangements for numbers 1 - 6 on both "dice"
 void one_one() {
   const int indices[] = {3};
@@ -460,93 +459,173 @@ int dht_read(uint8_t *humidity, uint8_t *temperature) {
   return 0;
 }
 
+/*
+| 00 | || | 01 |
+| 02 | 03 | 04 |
+| 05 | || | 06 |
+| || | || | || |
+| 07 | || | 08 |
+| 09 | 10 | 11 |
+| 12 | || | 13 |
+
+| | A | |
+| F | B |
+| | G | |
+| E | C |
+| | D | |
+*/
 
 /**
  * Short startup animation
  */
 void wave() {
+  leds[0] = CHSV(0, 255, 255);
+  FastLED.show();
+  delay(77);
+  leds[0] = CRGB::Black;
+
+  leds[2] = CHSV(28, 255, 255);
+  FastLED.show();
+  delay(77);
+  leds[2] = CRGB::Black;
+
+  leds[1] = CHSV(57, 255, 255);
+  leds[3] = CHSV(57, 255, 255);
+  leds[5] = CHSV(57, 255, 255);
+  FastLED.show();
+  delay(77);
+  leds[1] = CRGB::Black;
+  leds[3] = CRGB::Black;
+  leds[5] = CRGB::Black;
+
+  leds[4] = CHSV(85, 255, 255);
+  FastLED.show();
+  delay(77);
+  leds[4] = CRGB::Black;
+
+  leds[6] = CHSV(113, 255, 255);
+  leds[7] = CHSV(113, 255, 255);
+  FastLED.show();
+  delay(77);
+  leds[6] = CRGB::Black;
+  leds[7] = CRGB::Black;
+
+  leds[9] = CHSV(142, 255, 255);
+  FastLED.show();
   digitalWrite(A, HIGH);
   digitalWrite(F, HIGH);
   digitalWrite(ST, HIGH);
-  delay(150);
+  delay(77);
+  leds[9] = CRGB::Black;
   digitalWrite(A, LOW);
   digitalWrite(F, LOW);
-  digitalWrite(ST, LOW);
 
+  leds[8] = CHSV(170, 255, 255);
+  leds[10] = CHSV(170, 255, 255);
+  leds[12] = CHSV(170, 255, 255);
+  FastLED.show();
+  digitalWrite(B, HIGH);
+  digitalWrite(E, HIGH);
+  digitalWrite(G, HIGH);
+  delay(77);
+  leds[8] = CRGB::Black;
+  leds[10] = CRGB::Black;
+  leds[12] = CRGB::Black;
+  digitalWrite(B, LOW);
+  digitalWrite(E, LOW);
+  digitalWrite(G, LOW);
+
+  leds[11] = CHSV(198, 255, 255);
+  FastLED.show();
   for(int i = 0; i < 60; i++) {
-    digitalWrite(A, HIGH);
-    digitalWrite(F, HIGH);
-    digitalWrite(ND, HIGH);
-    delay(1.25);
-    digitalWrite(A, LOW);
-    digitalWrite(F, LOW);
-    digitalWrite(ND, LOW);
-
-    digitalWrite(B, HIGH);
-    digitalWrite(G, HIGH);
-    digitalWrite(E, HIGH);
-    digitalWrite(ST, HIGH);
-    delay(1.25);
-    digitalWrite(B, LOW);
-    digitalWrite(G, LOW);
-    digitalWrite(E, LOW);
-    digitalWrite(ST, LOW);
-  }
-
-  for(int i = 0; i < 60; i++) {
-    digitalWrite(A, HIGH);
-    digitalWrite(F, HIGH);
-    digitalWrite(RD, HIGH);
-    delay(0.833);
-    digitalWrite(A, LOW);
-    digitalWrite(F, LOW);
-    digitalWrite(RD, LOW);
-
-    digitalWrite(B, HIGH);
-    digitalWrite(G, HIGH);
-    digitalWrite(E, HIGH);
-    digitalWrite(ND, HIGH);
-    delay(0.833);
-    digitalWrite(B, LOW);
-    digitalWrite(G, LOW);
-    digitalWrite(E, LOW);
-    digitalWrite(ND, LOW);
-
     digitalWrite(C, HIGH);
     digitalWrite(D, HIGH);
     digitalWrite(ST, HIGH);
-    delay(0.833);
+    delay(0.642);
     digitalWrite(C, LOW);
     digitalWrite(D, LOW);
     digitalWrite(ST, LOW);
+
+    digitalWrite(A, HIGH);
+    digitalWrite(F, HIGH);
+    digitalWrite(ND, HIGH);
+    delay(0.642);
+    digitalWrite(A, LOW);
+    digitalWrite(F, LOW);
+    digitalWrite(ND, LOW);
   }
+  leds[11] = CRGB::Black;
+
+  leds[13] = CHSV(226, 255, 255);
+  FastLED.show();
+  for(int i = 0; i < 60; i++) {
+    digitalWrite(DP, HIGH);
+    digitalWrite(ST, HIGH);
+    delay(0.642);
+    digitalWrite(DP, LOW);
+    digitalWrite(ST, LOW);
+
+    digitalWrite(B, HIGH);
+    digitalWrite(E, HIGH);
+    digitalWrite(G, HIGH);
+    digitalWrite(ND, HIGH);
+    delay(0.642);
+    digitalWrite(B, LOW);
+    digitalWrite(E, LOW);
+    digitalWrite(G, LOW);
+    digitalWrite(ND, LOW);
+  }
+  leds[13] = CRGB::Black;
+  FastLED.show();
 
   for(int i = 0; i < 60; i++) {
-    digitalWrite(B, HIGH);
-    digitalWrite(G, HIGH);
-    digitalWrite(E, HIGH);
-    digitalWrite(RD, HIGH);
-    delay(1.25);
-    digitalWrite(B, LOW);
-    digitalWrite(G, LOW);
-    digitalWrite(E, LOW);
-    digitalWrite(RD, LOW);
-
     digitalWrite(C, HIGH);
     digitalWrite(D, HIGH);
     digitalWrite(ND, HIGH);
-    delay(1.25);
+    delay(0.642);
     digitalWrite(C, LOW);
     digitalWrite(D, LOW);
     digitalWrite(ND, LOW);
+
+    digitalWrite(A, HIGH);
+    digitalWrite(F, HIGH);
+    digitalWrite(RD, HIGH);
+    delay(0.642);
+    digitalWrite(A, LOW);
+    digitalWrite(F, LOW);
+    digitalWrite(RD, LOW);
+  }
+
+  for(int i = 0; i < 60; i++) {
+    digitalWrite(DP, HIGH);
+    digitalWrite(ND, HIGH);
+    delay(0.642);
+    digitalWrite(DP, LOW);
+    digitalWrite(ND, LOW);
+
+    digitalWrite(B, HIGH);
+    digitalWrite(E, HIGH);
+    digitalWrite(G, HIGH);
+    digitalWrite(RD, HIGH);
+    delay(0.642);
+    digitalWrite(B, LOW);
+    digitalWrite(E, LOW);
+    digitalWrite(G, LOW);
+    digitalWrite(RD, LOW);
   }
 
   digitalWrite(C, HIGH);
   digitalWrite(D, HIGH);
   digitalWrite(RD, HIGH);
-  delay(150);
+  delay(77);
   digitalWrite(C, LOW);
   digitalWrite(D, LOW);
+  digitalWrite(RD, LOW);
+
+  digitalWrite(DP, HIGH);
+  digitalWrite(RD, HIGH);
+  delay(77);
+  digitalWrite(DP, LOW);
   digitalWrite(RD, LOW);
 }
 
