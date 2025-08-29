@@ -11,6 +11,16 @@ float prevPoseX = 0;
 float prevPoseY = 0;
 float prevTheta = 0;
 
+//heading
+float target_angle = 0;
+
+//apriltag approach
+float prevAngleError = 0;
+float prevDistError = 0;
+
+//ramp thing
+bool on_ramp = false;
+
 void Robot::UpdatePose(const Twist& twist)
 {
     /**
@@ -21,7 +31,7 @@ void Robot::UpdatePose(const Twist& twist)
     float speedRight = twist.u + twist.omega * ROBOT_RADIUS;
     float speedLeft = twist.u - twist.omega * ROBOT_RADIUS;
 
-    // calculate distance from control loop time and speeds
+    // calculate distance_diff from control loop time and speeds
     // control loop is 20 ms
     float distRight = speedRight * 20 / 1000;
     float distLeft = speedLeft * 20 / 1000;
@@ -37,10 +47,17 @@ void Robot::UpdatePose(const Twist& twist)
     prevPoseY = currPose.y;
     prevTheta = currPose.theta;
 
-#ifdef __NAV_DEBUG__
+#ifdef __POSE_DEBUG__
     TeleplotPrint("x", currPose.x);
     TeleplotPrint("y", currPose.y);
     TeleplotPrint("theta", currPose.theta);
+
+    String buffer = 
+    "x: "       + String(currPose.x) +
+    ", y: "     + String(currPose.y) +
+    ", theta: " + String(currPose.theta);
+
+    sendMessage("Pose info", buffer);
 #endif
 
 }
@@ -73,13 +90,13 @@ bool Robot::CheckReachedDestination(void)
      * TODO: Add code to check if you've reached destination here.
      */
 
-    // min distance the robot must be within to count as arrived to a point
+    // min distance_diff the robot must be within to count as arrived to a point
     float distanceBuffer = 5;
 
     float dist_x = abs(destPose.x - currPose.x);
     float dist_y = abs(destPose.y - currPose.y);
 
-    // check if robot is withing acceptible distance
+    // check if robot is withing acceptible distance_diff
     if(dist_x <= distanceBuffer && dist_y <= distanceBuffer)
     {
         retVal = true;
@@ -96,7 +113,7 @@ void Robot::DriveToPoint(void)
          * TODO: Add your IK algorithm here. 
          */
 
-        // find errors for all coordinates and angle
+        // find errors for all coordinates and angle_diff
         float error_x = destPose.x - currPose.x;
         float error_y = destPose.y - currPose.y;
         float error_distance = sqrt(pow(error_x,2) + pow(error_y,2));
@@ -104,18 +121,15 @@ void Robot::DriveToPoint(void)
         float distance_cap = 100;
         if (error_distance > distance_cap) error_distance = distance_cap;
 
-        float target_angle = atan2(error_y, error_x);
+        target_angle = atan2(error_y, error_x);
 
         float error_angle = target_angle - currPose.theta;
         float error_pose = 0;//to implement
 
         if (error_angle > PI) error_angle -= 2*PI;
         if (error_angle < PI) error_angle += 2*PI;
-        
-        // minimum speed robot will go
-        int baseSpeed = 3;
 
-        // weight for angle and dist diffs
+        // weight for angle_diff and dist diffs
         float gainAngle = 5;
         float gainDist = 0.2;
         float gainPose = 0; // to implement
@@ -136,10 +150,20 @@ void Robot::DriveToPoint(void)
         TeleplotPrint("Y Error", error_y);
         TeleplotPrint("Distance Error", error_distance);
         TeleplotPrint("Theta Error", error_angle);
-
         TeleplotPrint("Target Angle", target_angle);
         TeleplotPrint("Right Wheel Speed", wheelSpeedRight);
         TeleplotPrint("Left Wheel Speed", wheelSpeedLeft);
+
+        String buffer =
+        "x error: "             + String(error_x)         +
+        ", y error: "           + String(error_y)         +
+        ", dist error: "        + String(error_distance)  +
+        ", theta error: "       + String(error_angle)     +
+        ", target angle: "      + String(target_angle)    +
+        ", right wheel speed: " + String(wheelSpeedRight) +
+        ", left wheel speed: "  + String(wheelSpeedLeft);
+
+        sendMessage("Nav info", buffer);
 #endif
 
         /**
@@ -166,11 +190,21 @@ void Robot::HandleAprilTag(const AprilTagDatum& tag)
 {
     //You may want to comment some of these out when you’re done testing.
     Serial.print("Tag: "); Serial.print(tag.id); Serial.print('\t');
-    Serial.print("cx: "); Serial.print(tag.cx); Serial.print('\t');
-    Serial.print("cy: ");Serial.print(tag.cy); Serial.print('\t');
-    Serial.print("h: ");Serial.print(tag.h); Serial.print('\t');
-    Serial.print("w: ");Serial.print(tag.w); Serial.print('\t');
-    Serial.print("rot: ");Serial.println(tag.rot); //rotated angle; try turning the tag
+    Serial.print("cx: ");  Serial.print(tag.cx); Serial.print('\t');
+    Serial.print("cy: ");  Serial.print(tag.cy); Serial.print('\t');
+    Serial.print("h: ");   Serial.print(tag.h);  Serial.print('\t');
+    Serial.print("w: ");   Serial.print(tag.w);  Serial.print('\t');
+    Serial.print("rot: "); Serial.println(tag.rot);
+
+    String buffer =
+    "ID: "  + String(tag.id) +
+    ", cx: "  + String(tag.cx) +
+    ", cy: "  + String(tag.cy) +
+    ", h: "   + String(tag.h) +
+    ", w: "   + String(tag.w) +
+    ", rot: " + String(tag.rot);
+
+    sendMessage("Apriltag info", buffer);
 
     /** TODO: Add code to handle a tag in APPROACHING and SEARCHING states. */
     if(robotState == ROBOT_SEARCHING || robotState == ROBOT_DRIVE_TO_POINT)
@@ -180,15 +214,25 @@ void Robot::HandleAprilTag(const AprilTagDatum& tag)
     else if(robotState == ROBOT_APPROACHING)
     {
         //adjust the motors to align
-        int distanceTolerance = 20; //cm
-        int headingTolerance = 20; //deg
-        if(CheckApproachComplete(headingTolerance, distanceTolerance)) EnterIdleState();
+        int distanceTolerance = 0; //cm
+        int headingTolerance = 0; //deg
+        if(CheckApproachComplete(headingTolerance, distanceTolerance)) {
+            if(ramping) {
+                SetDestination(Pose(prevPoseX, prevPoseY, prevTheta + 0.785));
+
+            } else {
+                EnterIdleState();
+            }
+        }
     }
 }
+
 void Robot::EnterSearchingState(void)
 {
     /** TODO: Set Romi to slowly spin to look for tags. */
     robotState = ROBOT_SEARCHING;
+    prevDistError = 0;
+    prevAngleError = 0;
     digitalWrite(LED_BUILTIN, 1);
     chassis.SetTwist(Twist(0, 0, 1.26));
 }
@@ -217,13 +261,13 @@ bool Robot::CheckApproachComplete(int headingTolerance, int distanceTolerance)
 {
     /** TODO: Add code to determine if the robot is at the correct location. */
 
-    uint16_t targetHeight = 75; // in pixel coords
-    uint16_t distance = aprilTag.h - targetHeight;
+    uint16_t targetHeight = 60; // in pixel coords
+    int16_t distance_diff = aprilTag.h - targetHeight;
 
     uint16_t targetCX = 80;
-    uint16_t angle = aprilTag.cx - targetCX;
+    int16_t angle_diff = aprilTag.cx - targetCX;
 
-    if((abs(distance) < distanceTolerance) && (abs(angle) < headingTolerance)) 
+    if((abs(distance_diff) < distanceTolerance) && (abs(angle_diff) < headingTolerance)) 
     {
         digitalWrite(13, 0);
         return(true); 
@@ -236,42 +280,77 @@ EventTimer tagLost;
 
 void Robot::ApproachTag(AprilTagDatum &tag)
 {
-
     // reset timer
-    long timerDur = 2000;
+    long timerDur = 1000;
     tagLost.Start(timerDur);
 
-    // get tag corners (WRONG)
-    uint16_t bottom_left[2] = {tag.cx - (tag.w/2), tag.cy - (tag.h/2)};
-    uint16_t bottom_right[2] = {tag.cx + (tag.w/2), tag.cy - (tag.h/2)};
-    uint16_t top_left[2] = {tag.cx - (tag.w/2), tag.cy + (tag.h/2)};
-    uint16_t top_right[2] = {tag.cx + (tag.w/2), tag.cy + (tag.h/2)};
-    
-    float targetHeight = 100;
+    if(tag.id == 5) {
+        float targetHeight = 50;
+        //when tag h is small robot should reverse bc camera on back
+        float distance_diff = tag.h - targetHeight;
+        
+        // bottom right y - bottom left y = negative turn 
+        //float angle_diff = bottom_right[1] - bottom_left[1];
 
-    //when tag h is small robot should reverse bc camera on back
-    float distance = tag.h - targetHeight;
-    
-    // bottom right y - bottom left y = negative turn 
-    //float angle = bottom_right[1] - bottom_left[1];
+        float targetCX = 80;
+        // when tag cx is small robot should turn cw (negative) bc camera on back
+        float angle_diff = tag.cx - targetCX;
 
-    float targetCX = 80;
-    // when tag cx is small robot should turn cw (negative) bc camera on back
-    float angle = tag.cx - targetCX;
+        float distGain = 3.3;
+        float anglularGain = 0.05;
 
-    float distGain = 0.1;
-    float anglularGain = 0.05;
+        float DistErrorDiff = distance_diff - prevDistError;
+        float AngleErrorDiff = angle_diff - prevAngleError;
 
-    //controller
-    float distEffort = -distGain * distance;
-    float angleEffort = -anglularGain * angle;
+        prevDistError = distance_diff;
+        prevAngleError = angle_diff;
 
-    // combine
-    chassis.SetTwist(Twist(distEffort, 0, angleEffort));
+        //controller
+        float distEffort = -distGain * distance_diff - 0.5*DistErrorDiff; //0.5
+        float angleEffort = -anglularGain * angle_diff - 0.1*AngleErrorDiff; //0.15
+
+        // combine
+        chassis.SetTwist(Twist(distEffort, 0, angleEffort));
+    }   
 }   
 
 bool Robot::CheckTagLost()
 {
-    if (tagLost.CheckExpired()) return true;
+    if (tagLost.CheckExpired())
+        return true;
     return false;
+}
+
+// Ramp Code
+void Robot::BeginRampDriving() {
+    robotState = ITS_RAMPIN_TIME;
+}
+
+void Robot::ToggleRampMode() {
+    ramping = !ramping;
+}
+
+//Emu
+void Robot::HandlePitchAngle(float pitchAngle) {
+    if(robotState == ITS_RAMPIN_TIME) {
+        if ((pitchAngle <= 5) && !on_ramp) {
+            // move forward
+            digitalWrite(13, 0);
+            chassis.SetTwist(Twist(10, 0, 0));
+            Serial.println("Driving fwd");
+
+        } else if (pitchAngle > 5 && pitchAngle < 15) {
+            // keep moving forward, detect ramp
+            digitalWrite(13, 1);
+            on_ramp = true;
+            Serial.println("Driving up ramp");
+            
+        } else if ((pitchAngle <= 5) && on_ramp){
+            // stop moving
+            digitalWrite(13, 0);
+            on_ramp = false;
+            Serial.println("Stopping");
+            EnterIdleState();
+        }
+    }
 }

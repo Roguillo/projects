@@ -61,7 +61,6 @@ void Robot::RobotLoop(void)
             if(CheckReachedDestination()) HandleDestination();
         }
     }
-
     
     // Check for april tags (TODO: Add code to handle multiple tags)
     //Serial.println(openmv.checkUART(aprilTag));
@@ -75,12 +74,14 @@ void Robot::RobotLoop(void)
         }
     }
 
-    if(currPose.theta > 2*PI) currPose.theta - 2*PI;
-    if(currPose.theta < 2*PI) currPose.theta + 2*PI;
+    if(currPose.theta > 2*PI) currPose.theta -= 2*PI;
+    if(currPose.theta < 2*PI) currPose.theta += 2*PI;
 
     if(CheckTagLost() && robotState == ROBOT_APPROACHING)
     {
         EnterSearchingState();
     }
-    
+
+    float pitchAngle = -99;
+    if(chassis.CheckIMU(pitchAngle)) HandlePitchAngle(pitchAngle);
 }

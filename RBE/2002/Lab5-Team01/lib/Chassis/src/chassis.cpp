@@ -1,4 +1,5 @@
 #include "chassis.h"
+#include <LSM6.h>
 #include "Romi32U4MotorTemplate.h"
 
 Romi32U4EncodedMotor<LEFT_XOR, LEFT_B, PWM_L, DIR_L, OCR_L> leftMotor("L");
@@ -8,6 +9,24 @@ Romi32U4EncodedMotor<RIGHT_XOR, RIGHT_B, PWM_R, DIR_R, OCR_R> rightMotor("R");
  * Because it's declared static, we initialize Chassis::loopFlag here.
  */
 uint8_t Chassis::loopFlag = 0;
+
+/* pitch angle */
+/////accelerometer
+//windowed avg arrays for estimated pitch angle
+int32_t acc_x_readings[5] = {0, 0, 0, 0, 0};
+int32_t acc_z_readings[5] = {0, 0, 0, 0, 0};
+//acc avg variables
+float acc_x_avg = 0;
+float acc_z_avg = 0;
+//full 360 deg pitch angle variable
+float acc_angle = 0;
+/////gyro
+int32_t gyro_y_readings[5] = {0, 0, 0, 0, 0};
+float gyro_y_avg = 0; // Current gyro average reading
+float gyro_y_prev = 0; // Previous gyro reading
+float gyro_y_angle = 0; //pitch angle
+/////
+uint8_t kappa = 0.25; //variable for setting weights in pitch angle weighted average
 
 /**
  * For taking snapshots and raising the flag.
@@ -90,6 +109,11 @@ void Chassis::InititalizeChassis(void)
 {
     InitializeMotorControlTimer();
     InitializeMotors();
+    
+    //Emu
+    imu.init();
+    imu.setGyroDataOutputRate(LSM6::ODR208);
+    imu.setAccDataOutputRate(LSM6::ODR208);
 }
 
 /**
@@ -187,4 +211,73 @@ Twist Chassis::CalcOdomFromWheelMotion(void)
 #endif
 
     return velocity;
+}
+
+bool Chassis::CheckIMU(float& currentAngleEst)
+{
+    bool retVal = false;
+
+    if(imu.checkForNewData())
+    {
+    #ifdef __IMU_DEBUG__
+        imu.TeleplotPrint("a.x", imu.a.x);
+        imu.TeleplotPrint("a.y", imu.a.y);
+        imu.TeleplotPrint("a.z", imu.a.z);
+        imu.TeleplotPrint("g.x", imu.g.x);
+        imu.TeleplotPrint("g.y", imu.g.y);
+        imu.TeleplotPrint("g.z", imu.g.z);
+    #endif
+
+        /* from accelerometer */
+        acc_x_avg = 0;
+        acc_z_avg = 0;
+
+        for(int i = 0; i < 4; i++) {
+            acc_x_readings[i] = acc_x_readings[i + 1];
+            acc_z_readings[i] = acc_z_readings[i + 1];
+
+            acc_x_avg += acc_x_readings[i];
+            acc_z_avg += acc_z_readings[i];
+        }
+        acc_x_readings[4] = imu.a.x;
+        acc_z_readings[4] = imu.a.z;
+        acc_x_avg = (acc_x_avg + imu.a.x) / 5;
+        acc_z_avg = (acc_z_avg + imu.a.z) / 5;
+
+        acc_angle = degrees(atan2(acc_x_avg, acc_z_avg));
+
+        // if(acc_angle < 0) { //for 0 - 360 deg
+        //     acc_angle += 360;
+        // } 
+        
+        /* from gyro */
+        gyro_y_avg = 0;
+
+        for(int i = 0; i < 4; i++) {
+            gyro_y_readings[i] = gyro_y_readings[i + 1];
+            gyro_y_avg += gyro_y_readings[i];
+        }
+        gyro_y_readings[4] = imu.g.y;
+        gyro_y_avg = -(((gyro_y_avg + imu.g.y) / 5) + 765); //gyro bias 0f 790.726
+
+        // if(gyro_y_avg < 0) { //for 0 -360 deg
+        //     gyro_y_avg += 360;
+        // }
+
+        // Integration of gyro readings compared to previous reading
+        gyro_y_angle = gyro_y_prev + ((1.0 / 208.0) * (0.00875 * gyro_y_avg)); // 0.00875dps/LSB, 1/208 update period
+        gyro_y_prev = gyro_y_angle;
+
+
+        /* putting it all together */
+        estimatedPitchAngle = (kappa * acc_angle) + ((1.0 - kappa) * gyro_y_angle);
+
+        // Serial.print("estimated pitch angle: "); Serial.print(estimatedPitchAngle);
+        // Serial.print(", kappa value: "); Serial.println(kappa);
+
+        currentAngleEst = estimatedPitchAngle;
+        retVal = true;
+    }
+
+    return retVal;
 }

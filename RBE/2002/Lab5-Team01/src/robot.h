@@ -17,6 +17,15 @@ protected:
     };
     ROBOT_CTRL_MODE robotCtrlMode = CTRL_AUTO;
 
+    String rcm_to_string(int enum_val) {
+        switch(enum_val) {
+            case 0: return("CTRL_TELEOP");
+            case 1: return("CTRL_AUTO");
+
+            default: return("Huh?");
+        }
+    }
+
     /**
      * robotState is used to track the current task of the robot. You will add new states as 
      * the term progresses.
@@ -27,26 +36,19 @@ protected:
         ROBOT_DRIVE_TO_POINT,
         ROBOT_SEARCHING,
         ROBOT_APPROACHING,
+        ITS_RAMPIN_TIME
     };
     ROBOT_STATE robotState = ROBOT_IDLE;
 
     String rs_to_string(int enum_val) {
         switch(enum_val) {
-            case 0:
-                return("ROBOT_IDLE");
-                break;
-            case 1:
-                return("ROBOT_DRIVE_TO_POINT");
-                break;
-            case 2:
-                return("ROBOT_SEARCHING");
-                break;  
-            case 3:
-                return("ROBOT_APPROACHING");
-                break;
-            default:
-                return("Huh?");
-                break;
+            case 0: return("ROBOT_IDLE");
+            case 1: return("ROBOT_DRIVE_TO_POINT");
+            case 2: return("ROBOT_SEARCHING");
+            case 3: return("ROBOT_APPROACHING");
+            case 4: return("ITS_RAMPIN_TIME");
+
+            default: return("Huh?");
         }
     }
 
@@ -65,6 +67,9 @@ protected:
     // Create a camera object
     OpenMV openmv;
     AprilTagDatum aprilTag;
+
+    //Ramp doodad
+    bool ramping = true;
     
 public:
     Robot(void) {keyString.reserve(10);}
@@ -88,10 +93,25 @@ protected:
     void DriveToPoint(void);
     bool CheckReachedDestination(void);
     void HandleDestination(void);
+
+    //CV
     void HandleAprilTag(const AprilTagDatum& tag);
     void EnterSearchingState(void);
     void EnterApproachingState(void);
     void ApproachTag(AprilTagDatum &tag);
     bool CheckApproachComplete(int headingTolerance, int distanceTolerance);
     bool CheckTagLost(void);
+
+    //wireless
+    void sendMessage(const String& topic, const String& message);
+    bool checkSerial1(void);
+    void wireless_init(void);
+    void wifi_loop(void);
+
+    //Ramp shenanigans
+    void BeginRampDriving(void);
+    void ToggleRampMode(void);
+
+    //Emu
+    void HandlePitchAngle(float);
 };

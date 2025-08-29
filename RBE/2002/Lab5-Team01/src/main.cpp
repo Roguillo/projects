@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <LSM6.h>
 #include "robot.h"
 
 Robot robot;

@@ -1,9 +1,10 @@
 #pragma once
 
 #include <Arduino.h>
-
 #include "chassis-params.h"
 #include "utils.h"
+#include <event_timer.h>
+#include <LSM6.h>
 
 class Chassis
 {
@@ -25,7 +26,14 @@ protected:
      */
     static uint8_t loopFlag;
 
+    /* Timer for dead reckoning */
+    EventTimer navTimer;
+    EventTimer turnTimer;
+
 public:
+    //emu object
+    LSM6 imu;
+
     Chassis(void) {}
     void InititalizeChassis(void);
 
@@ -34,6 +42,9 @@ public:
 
     /* Needed for managing motors. */
     static void Timer4OverflowISRHandler(void);
+
+    // Robot pitch angle from LSM6
+    float estimatedPitchAngle = 0;
 
 public:
     /**
@@ -48,6 +59,9 @@ public:
      */
     void SetWheelSpeeds(float, float);
     void Stop(void) { SetWheelSpeeds(0, 0); }
+
+    //Emu
+    bool CheckIMU(float&);
 
 protected:
     /**

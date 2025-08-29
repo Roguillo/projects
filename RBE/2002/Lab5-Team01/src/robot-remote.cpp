@@ -4,7 +4,6 @@
  * the code that isn't needed later in the term.
  */
 #include "robot.h"
-
 #include <ir_codes.h>
 #include <IRdecoder.h>
 
@@ -39,22 +38,39 @@ void Robot::HandleKeyCode(int16_t keyCode)
          */
         switch(keyCode)
         {
-            case NUM_1:
+            case PLAY_PAUSE:
+                ToggleRampMode();
+                break;
+            case NUM_0_10:
                 EnterSearchingState();
                 Serial.println(rs_to_string(robotState));
                 break;
-            case NUM_2:
-                SetDestination(Pose(60, 0, 0)); 
-                break;
-            case NUM_4:
+            case NUM_1:
                 SetDestination(Pose(30, 30, 0));
                 break;
-            case NUM_6:
+            case NUM_2:
+                SetDestination(Pose(60, 0, 0));
+                break;
+            case NUM_3:
                 SetDestination(Pose(30, -30, 0));
                 break;
-            case NUM_8:
+            case NUM_4:
+                SetDestination(Pose(0, 60, 0));
+                break;
+            case NUM_5:
                 SetDestination(Pose(0, 0, 0));
                 break;
+            case NUM_6:
+                SetDestination(Pose(0, -60, 0)); 
+                break;
+            case NUM_7:
+                SetDestination(Pose(-30, 30, 0));
+                break;
+            case NUM_8:
+                SetDestination(Pose(-60, 0, 0));
+                break;
+            case NUM_9:
+                SetDestination(Pose(-30, -30, 0));
         }
         keyString = "";
     }
@@ -63,16 +79,23 @@ void Robot::HandleKeyCode(int16_t keyCode)
     {
         switch(keyCode)
         {
-            case UP_ARROW:
+            case UP_ARROW: //drive forwards at 20 cm/s
                 chassis.SetTwist(Twist(20, 0, 0));
                 break;
-            case RIGHT_ARROW:
-                chassis.SetTwist(Twist(0, 0, 1));
+            case RIGHT_ARROW: //turn clockwise at 3.14 rad/s
+                chassis.SetTwist(Twist(0, 0, -1.57));
                 break;
-            case DOWN_ARROW:
+            case DOWN_ARROW://drive backwards at 20 cm/s
+                chassis.SetTwist(Twist(-20, 0, 0));
                 break;
-            case LEFT_ARROW:
-                chassis.SetTwist(Twist(10, 0, 0.25));
+            case LEFT_ARROW: //turn counterclockwise at 3.14 rad/s
+                chassis.SetTwist(Twist(0, 0, 1.57));
+                break;
+            case REWIND: //circle testing (r = 25 cm, counterclockwise motion)
+                chassis.SetTwist(Twist(20, 0, 0.667));
+                break;
+            case NUM_0_10: //circle testing (r = 25 cm, clockwise motion)
+                chassis.SetTwist(Twist(-20, 0, -0.667));
                 break;
         }
         keyString = "";
