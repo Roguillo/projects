@@ -1,1 +1,1 @@
-For personal projects
+For personal and academic projects
