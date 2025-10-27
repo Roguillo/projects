@@ -1,0 +1,27 @@
+clc;
+
+rob = Robot();
+
+test_tp = [130 -100 200 pi/2]; % x y z gamma
+test_tp2 = [200 150 50 0]; % x y z gamma
+
+
+test_jp = [15  -20   -40   0]; % q1 q2 q3 q4
+
+%%blocking code testing
+ rob.blocking_ts_move([103,4-17, 130.69 - 12.5, 25, pi/2], mode="cubic");
+
+
+% rob.blocking_ts_move(test_tp2, mode="quintic");
+% rob.blocking_js_move(test_jp, time=3);
+
+%%pick up ball testing
+%rob.pick_up_ball([104,-97], "Green");
+% rob.pick_up_ball([67,-41], "Red");
+% rob.pick_up_ball([55,0], "Yellow");
+% rob.pick_up_ball([90,-130], "Orange");
+
+
+
+
+

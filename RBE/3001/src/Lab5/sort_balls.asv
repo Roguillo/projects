@@ -1,0 +1,80 @@
+clc; clear;
+
+% In this file, write your "main" script for picking up the balls
+% This should only be 10-15 lines long, the vast majority of the work
+% should be in your Robot and ImageProcessor classes
+
+% Ultimately it's up to you to decide how to organize this, but the
+% "detect_balls" and "pick_up_ball" functions should do a lot of the work
+% for you.
+
+% @@@@@@@@@@@@@@
+% YOUR CODE HERE
+% @@@@@@@@@@@@@@
+
+roberto = Robot();
+Logan_Paul    = ImageProcessor(debug = true);
+Eye_of_Sauron = Logan_Paul.camera;
+Nokia         = Eye_of_Sauron.cam;
+%preview(Nokia);
+
+
+% debugging purposes
+
+%bw = Logan_Paul.generate_static_mask();
+% figure(1);
+%imshow(bw);
+frame         = Eye_of_Sauron.getImage();
+%imshow(frame);
+%[x,y] = ginput(4)
+
+
+[Clanker, colors] = Logan_Paul.detect_balls();
+% [Clanker, colors] = Logan_Paul.detect_balls();
+
+while true
+
+
+
+    for i = 1:height(Clanker)
+
+        roberto.pick_up_ball(Clanker(i, :), colors(1, i));
+
+
+        while isempty(Clanker)
+            pause(5);
+            [Clanker, colors]
+        if i == height(Clanker)
+            pause(5);
+            [Clanker, colors] = Logan_Paul.detect_balls();
+
+
+        end
+
+
+
+    end
+
+
+
+
+end
+% while true
+% 
+%     for i = 1:height(Clanker)
+% 
+%         roberto.pick_up_ball(Clanker(i, :), colors(1, i));
+% 
+%         if i == height(Clanker)
+%             pause(5);
+%             [Clanker, colors] = Logan_Paul.detect_balls();
+% 
+%         end
+% 
+%     end
+
+
+
+
+%end
+

@@ -1,0 +1,18 @@
+clc; clear;
+
+clanker = Robot();
+travel_time  = 2;
+
+% v = [34.9805   -4.2063    4.2219   89.9844];
+% 
+% fk_mat = clanker.fk_3001(deg2rad(v(1,:)));
+% coords = [fk_mat(1, 4), fk_mat(2, 4), fk_mat(3, 4)];
+% angles = rad2deg(clanker.ik3001([coords, pi/2]));
+% 
+% clanker.interpolate_jp(angles, travel_time);
+
+tic;
+clanker.measure_js(true, false);
+toc
+
+NumIK = clanker.Num_IK([80, 100, 200, 0]);

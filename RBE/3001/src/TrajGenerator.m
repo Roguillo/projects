@@ -1,0 +1,97 @@
+classdef TrajGenerator < handle 
+    
+    methods(Static)
+        % TODO: Fill in the arguments for these methods
+        %function coeffs = cubic_traj(q_0, q_f,t_0, t_f)   % arguments were not already a part of the lab doc - note to lab mates
+
+        function coeffs = cubic_traj(q_0, q_f,t_0, t_f)
+        %CUBIC_TRAJ Generates coefficients for a cubic trajectory
+        % Inputs:
+        %   TODO: Describe input args
+        % q_0 is the beginning position of the joint
+        % q_f is the end position of the joint
+               % their derivatives should = 0
+        % t_0/t_f are the beginning/end of the timestep of the trajectory
+        % Outputs:
+        %   coeffs: a [1x4] matrix of cubic trajectory coefficients
+            
+            % YOUR CODE HERE
+            % Hint: to solve the linear system of equations b = Ax,
+            %       use x = A \ b
+
+          A      = [1, t_0,   t_0^2,   t_0^3;
+                    0, 1  , 2*t_0,   3*t_0^2;
+                    1, t_f,   t_f^2,   t_f^3; 
+                    0, 1  , 2*t_f,   3*t_f^2];
+
+
+          coeffs = A \ [q_0; 0; q_f; 0];
+          coeffs = coeffs'
+
+        end
+
+        % TODO: Fill in the arguments for these methods
+
+        function coeffs = quinitic_traj(q_0, q_f, t_0, t_f)   % arguments were not already a part of the lab doc - note to lab mates
+        %function coeffs = quinitic_traj(q_0, q_f, v_0, v_f, a_0, a_f, t_0, t_f) 
+
+        %CUBIC_TRAJ Generates coefficients for a quintic trajectory
+        % Inputs:
+        %   TODO: Describe input args
+        % q_0 is the beginning position of the joint
+        % q_f is the end position of the joint
+               % their derivatives should = 0 --> and so should the
+               % derivatives' derivatives
+        % t_0/t_f are the beginning/end of the timestep of the trajectory
+        % Outputs:
+        %   coeffs: a [1x6] matrix of quintic trajectory coefficients
+
+            A      = [1, t_0,   t_0^2,   t_0^3,    t_0^4,    t_0^5;
+                      0, 1  , 2*t_0  , 3*t_0^2,  4*t_0^3,  5*t_0^4;
+                      0, 0  , 2      , 6*t_0  , 12*t_0^2, 20*t_0^3;
+                      1, t_f,   t_f^2,   t_f^3,    t_f^4,    t_f^5; 
+                      0, 1  , 2*t_f  , 3*t_f^2,  4*t_f^3,  5*t_f^4;
+                      0, 0  , 2      , 6*t_f  , 12*t_f^2, 20*t_f^3];
+
+            coeffs = A \ [q_0; 0; 0; q_f; 0; 0];
+            coeffs = coeffs'
+        end
+
+        function state = eval_traj(coeff_mat, t) 
+            %EVAL_TRAJ Evaluates multiple trajectories
+            % Inputs:
+            %   coeff_mat: a [nx4] or [nx6] matrix where each row is a set of
+            %              cubic or quintic trajectory coefficients
+            %   t: a time in seconds at which to evaluate the trajectories
+            % Outputs:
+            %   state: a [nx1] column vector containing the results of 
+            %          evaluating the input trajectories at time t
+            
+            m     = width(coeff_mat);             %variable that holds the width of the coefficient matrix as its value.
+            state = zeros(m*height(coeff_mat),1); %predetermine the size of state to be nx1
+            t_0   = 0;                            %beginning of time step
+            t_f   = t;                            %ending of time step
+        
+            if m == 4                             %if we have a cubic, set A to the cubic transfer fn
+                A = [1, t_0,   t_0^2,   t_0^3;
+                     0, 1  , 2*t_0  , 3*t_0^2;
+                     1, t_f,   t_f^2,   t_f^3; 
+                     0, 1  , 2*t_f  , 3*t_f^2];
+            elseif m == 6                         %if we have a quintic, set A to the quintic transfer fn
+                A = [1, t_0,   t_0^2,   t_0^3,    t_0^4,    t_0^5;
+                     0, 1  , 2*t_0  , 3*t_0^2,  4*t_0^3,  5*t_0^5;
+                     0, 0  , 2      , 6*t_0  , 12*t_0^2, 20*t_0^3;
+                     1, t_f,   t_f^2,   t_f^3,    t_f^4,    t_f^5; 
+                     0, 1  , 2*t_f  , 3*t_f^2,  4*t_f^3,  5*t_f^4;
+                     0, 0  , 2      , 6*t_f  , 12*t_f^2, 20*t_f^3];
+            else
+                A = zeros(size(coeff_mat));
+            end
+                j = 1;
+                for i = 1:m:m*height(coeff_mat)
+                   state(i:i+m-1,1) =  A * (coeff_mat(j,:))';
+                   j = j + 1;
+                end
+        end
+    end
+end
