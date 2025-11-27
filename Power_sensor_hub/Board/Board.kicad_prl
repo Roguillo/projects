@@ -101,7 +101,10 @@
       "unconnected-(U1-PD6-Pad26)",
       "unconnected-(U1-PD7-Pad27)",
       "/Ultra_ECHO",
-      "/Ultra_TRIG"
+      "/Ultra_TRIG",
+      "BST_3V3",
+      "BST_5V",
+      "BST_6V"
     ],
     "high_contrast_mode": 0,
     "net_color_mode": 1,
@@ -162,7 +165,7 @@
       39,
       40
     ],
-    "visible_layers": "7ffffff_80000001",
+    "visible_layers": "002d0f0_00000000",
     "zone_display_mode": 0
   },
   "git": {
