@@ -1,9 +1,9 @@
 #include <Arduino.h>
-
 #include <Arduino_FreeRTOS.h>
 #include <FreeRTOSConfig.h>
 #include <task.h>
 
+// module libraries
 #include "IMU/IMU.h"
 #include "Ultrasonic/Ultrasonic.h"
 #include "LEDs/LEDs.h"
